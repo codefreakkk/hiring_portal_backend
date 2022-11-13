@@ -16,6 +16,7 @@ const jobs = mongoose.Schema({
     qualification: [{}],
     skills: [{}],
     keywords: [{}],
+    imageUrl: String,
 })
 
 const postJobs = new mongoose.model("postJobs", jobs);
