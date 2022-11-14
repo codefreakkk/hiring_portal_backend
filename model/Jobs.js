@@ -6,7 +6,7 @@ const jobs = mongoose.Schema({
     jobType: String,
     jobCategory: String,
     vacancy: String,
-    experience: String,
+    jobexperience: String,
     closingDate: String,
     location: String,
     email: String,
@@ -17,6 +17,7 @@ const jobs = mongoose.Schema({
     skills: [{}],
     keywords: [{}],
     imageUrl: String,
+    status: String,
 })
 
 const postJobs = new mongoose.model("postJobs", jobs);
