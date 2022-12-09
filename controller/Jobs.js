@@ -5,7 +5,7 @@ const Jobs = require("../model/Jobs");
 const fileUpload = require("express-fileupload");
 const path = require("path");
 
-// configuration
+// image upload configuration
 cloudinary.config({
   cloud_name: "duwbwdwqc",
   api_key: "723896973772636",
@@ -18,7 +18,7 @@ router.use(
   })
 );
 
-// route for posting job
+// route for posting one job
 router.post("/api/postjob", (req, res) => {
   // check if file is been served to server or not
   try {
@@ -35,6 +35,7 @@ router.post("/api/postjob", (req, res) => {
         // if file uploads then store all data into database
         if (!err) {
           const jobData = new Jobs({
+            oid: data.oid,
             jobTitle: data.jobTitle.toLowerCase(),
             jobDescription: data.jobDesc,
             jobType: data.jobType,
@@ -69,7 +70,7 @@ router.post("/api/postjob", (req, res) => {
   }
 });
 
-// route for deleting a job
+// route for deleting one job
 router.delete("/api/deletejob/:id", (req, res) => {
   try {
     const id = req.params.id;
@@ -82,12 +83,25 @@ router.delete("/api/deletejob/:id", (req, res) => {
   }
 });
 
-// route fetching jobs
+// route for fetching all jobs
 router.get("/api/getalljobs", (req, res) => {
   Jobs.find((err, data) => {
     if (!err) res.status(200).send(data);
     else res.status(500).send({ status: false });
   });
+});
+
+// route for fetching one job
+router.get("/api/getjob/:id", (req, res) => {
+  try {
+    const id = req.params.id;
+    Jobs.findOne({ _id: id }, (err, data) => {
+      if (!err) res.status(200).send(data);
+      else res.status(500).send({ data: false });
+    });
+  } catch (e) {
+    res.status(500).send({ data: false });
+  }
 });
 
 // route for handling filter
