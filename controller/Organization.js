@@ -3,20 +3,19 @@ const router = express.Router();
 
 const Organization = require("../model/Organization");
 
-// route for getting organization data
+// fetch one record of organization route
 router.post("/api/organization", (req, res) => {
-  const oid = req.body.oid;
-  Organization.findOne({ oid: oid }, (err, data) => {
+  const _id = req.body.oid;
+  Organization.findOne({ _id: _id }, (err, data) => {
     if (!err) res.status(200).send(data);
-    else res.status(500).send({ status: false });
+    else res.status(500).send(data);
   });
 });
 
-// route for storing orginzation data in db
+// register organization route
 router.post("/api/registerorganization", (req, res) => {
   const org = req.body;
   if (
-    org.oid.length != 0 &&
     org.oname.length != 0 &&
     org.oemail.length != 0 &&
     org.ocontact.length != 0 &&
@@ -25,7 +24,6 @@ router.post("/api/registerorganization", (req, res) => {
     org.olocation.length != 0
   ) {
     const data = new Organization({
-      oid: org.oid,
       organizationName: org.oname,
       organizationEmail: org.oemail,
       organizationContact: org.ocontact,
@@ -44,5 +42,37 @@ router.post("/api/registerorganization", (req, res) => {
     res.status(500).send({ status: false });
   }
 });
+
+// update organization details
+router.put("/api/updateorganization", (req, res) => {
+  try {
+    const org = req.body;
+    if (
+      org.oid.length != 0 &&
+      org.oname.length != 0 &&
+      org.oemail.length != 0 &&
+      org.ocontact.length != 0 &&
+      org.otype.length != 0 &&
+      org.empCount.length != 0 &&
+      org.olocation.length != 0
+    )
+    {
+        Organization.findOneAndUpdate(
+          {_id: org.oid}, 
+          { $set: {
+            organizationName: org.oname,
+          },
+        }, (err, data) => {
+          if(!err) res.status(200).send({status: true});
+          else res.status(500).send({status: false});
+        })
+    }
+    else res.status(500).send({status: false});
+
+  } catch(e) {
+    console.log(e)
+    res.status(500).send({status: false});
+  }
+})
 
 module.exports = router;

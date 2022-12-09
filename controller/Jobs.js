@@ -21,72 +21,105 @@ router.use(
 // route for posting job
 router.post("/api/postjob", (req, res) => {
   // check if file is been served to server or not
-  if (!req.files) {
-    res.status(500).send({ status: 404 });
-    console.log("file not received");
-    return;
-  }
-  const file = req.files.image;
-  const ext = path.extname(file.name);
-  const data = req.body;
-  if (ext == ".png" || ext == ".pdf" || ext == ".jpeg" || ext == ".jpg") {
-    cloudinary.uploader.upload(file.tempFilePath, (err, result) => {
-      // if file uploads then store all data into database
-      if (!err) {
-        const jonData = new Jobs({
-          jobTitle: data.jobTitle.toLowerCase(),
-          jobDescription: data.jobDesc,
-          jobType: data.jobType,
-          jobCategory: data.jobCat,
-          vacancy: data.vacancy,
-          jobexperience: data.jobexperience,
-          closingDate: data.closingDate,
-          location: data.location,
-          email: data.email,
-          website: data.website,
-          responsibilities: JSON.parse(data.resp),
-          requirements: JSON.parse(data.requirements),
-          qualification: JSON.parse(data.qualification),
-          skills: JSON.parse(data.experience),
-          keywords: JSON.parse(data.keywords),
-          imageUrl: result.url,
-          status: "true",
-        });
-        // save data
-        jonData.save((err, data) => {
-          if (!err) res.status(200).send({ status: true });
-          else res.status(500).send({ status: 500 });
-        });
-      } else res.status(500).send({ status: -1 });
-    });
-  } else {
-    console.log("Error");
-    res.status(500).send({ status: -2 });
+  try {
+    if (!req.files) {
+      res.status(500).send({ status: 404 });
+      console.log("file not received");
+      return;
+    }
+    const file = req.files.image;
+    const ext = path.extname(file.name);
+    const data = req.body;
+    if (ext == ".png" || ext == ".pdf" || ext == ".jpeg" || ext == ".jpg") {
+      cloudinary.uploader.upload(file.tempFilePath, (err, result) => {
+        // if file uploads then store all data into database
+        if (!err) {
+          const jobData = new Jobs({
+            jobTitle: data.jobTitle.toLowerCase(),
+            jobDescription: data.jobDesc,
+            jobType: data.jobType,
+            jobCategory: data.jobCat,
+            vacancy: data.vacancy,
+            jobexperience: data.jobexperience,
+            closingDate: data.closingDate,
+            location: data.location,
+            email: data.email,
+            website: data.website,
+            responsibilities: JSON.parse(data.resp),
+            requirements: JSON.parse(data.requirements),
+            qualification: JSON.parse(data.qualification),
+            skills: JSON.parse(data.experience),
+            keywords: JSON.parse(data.keywords),
+            imageUrl: result.url,
+            status: "true",
+          });
+          // save data
+          jobData.save((err, data) => {
+            if (!err) res.status(200).send({ status: true });
+            else res.status(500).send({ status: 500 });
+          });
+        } else res.status(500).send({ status: -1 });
+      });
+    } else {
+      console.log("Error");
+      res.status(500).send({ status: -2 });
+    }
+  } catch (e) {
+    res.status(500).send({ status: -1 });
   }
 });
 
-// get jobs route
-router.get("/getalljobs", (req, res) => {
+// route for deleting a job
+router.delete("/api/deletejob/:id", (req, res) => {
+  try {
+    const id = req.params.id;
+    Jobs.deleteOne({ _id: id }, (err, data) => {
+      if (!err) res.status(200).send({ status: true });
+      else req.status(500).send({ status: false });
+    });
+  } catch (e) {
+    res.status(500).send({ status: false });
+  }
+});
+
+// route fetching jobs
+router.get("/api/getalljobs", (req, res) => {
   Jobs.find((err, data) => {
     if (!err) res.status(200).send(data);
     else res.status(500).send({ status: false });
   });
 });
 
-// handle filter jobs route
+// route for handling filter
 router.post("/api/filterjobs", (req, res) => {
-  const data = req.body;
-  Jobs.find(
-    {
-      jobTitle: data.search,
-      status: data.active,
-      jobType: data.jtype,
-      closingDate: data.date,
-    },
-    (err, data) => {
-      if (!err) console.log(data);
-    }
-  );
+  try {
+    const data = req.body;
+    console.log(data);
+
+    const jobType = data.jtype;
+    const closingDate = data.date;
+    const status = data.active;
+    const jobTitle = data.search;
+
+    const regex = new RegExp("^" + jobTitle, "i");
+    Jobs.find(
+      {
+        $and: [
+          { jobTitle: regex },
+          { closingDate: closingDate },
+          { jobType: jobType },
+          { status: status },
+        ],
+      },
+      (err, data) => {
+        if (!err) res.status(200).send(data);
+        else res.status(500).send({ data: false });
+      }
+    );
+  } catch (e) {
+    console.log(e);
+    res.status(500).send({ data: false });
+  }
 });
 
 module.exports = router;
