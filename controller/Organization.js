@@ -55,24 +55,24 @@ router.put("/api/updateorganization", (req, res) => {
       org.otype.length != 0 &&
       org.empCount.length != 0 &&
       org.olocation.length != 0
-    )
-    {
-        Organization.findOneAndUpdate(
-          {_id: org.oid}, 
-          { $set: {
+    ) {
+      Organization.findOneAndUpdate(
+        { _id: org.oid },
+        {
+          $set: {
             organizationName: org.oname,
           },
-        }, (err, data) => {
-          if(!err) res.status(200).send({status: true});
-          else res.status(500).send({status: false});
-        })
-    }
-    else res.status(500).send({status: false});
-
-  } catch(e) {
-    console.log(e)
-    res.status(500).send({status: false});
+        },
+        (err, data) => {
+          if (!err) res.status(200).send({ status: true });
+          else res.status(500).send({ status: false });
+        }
+      );
+    } else res.status(500).send({ status: false });
+  } catch (e) {
+    console.log(e);
+    res.status(500).send({ status: false });
   }
-})
+});
 
 module.exports = router;
