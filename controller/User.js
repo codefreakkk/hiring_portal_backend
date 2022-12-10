@@ -1,20 +1,27 @@
 const express = require("express");
 const router = express.Router();
 const User = require("../model/User");
+const jwt = require("jsonwebtoken");
+
+const generateToken = (id) => {
+  return jwt.sign({ id }, "codefreak.co.in", {
+    expiresIn: "1d",
+  });
+};
 
 router.post("/api/registeruser", (req, res) => {
   try {
     const userData = req.body;
-
     // check if email already exist in db
     User.findOne({ userEmail: userData.userEmail }, (err, emailData) => {
       if (!err) {
-        console.log(emailData)
+        console.log(emailData);
         if (emailData == null) {
           const data = new User({
             userName: userData.userName,
             userEmail: userData.userEmail.toLowerCase(),
             userPassword: userData.userPassword,
+            token: "",
           });
 
           data.save((err) => {
@@ -26,6 +33,33 @@ router.post("/api/registeruser", (req, res) => {
     });
   } catch (e) {
     console.log(e);
+    res.status(500).send({ status: false });
+  }
+});
+
+// route for login
+router.post("/api/login", async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    const data = await User.findOne({
+      userEmail: email,
+      userPassword: password,
+    });
+    if (data != null) {
+      const id = data._id.toString();
+      const token = generateToken(id);
+      User.findOneAndUpdate(
+        { _id: id },
+        {
+          $set: {
+            token: token,
+          },
+        },
+        () => {}
+      );
+      res.status(200).send({ status: true, token: token });
+    } else res.status(401).send({ status: false });
+  } catch (e) {
     res.status(500).send({ status: false });
   }
 });
