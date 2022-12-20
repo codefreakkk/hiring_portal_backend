@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const User = require("../model/User");
 const jwt = require("jsonwebtoken");
+const auth = require("../middleware/auth");
 
 const generateToken = (id) => {
   return jwt.sign({ id }, "codefreak.co.in", {
@@ -26,7 +27,7 @@ router.post("/api/registeruser", (req, res) => {
 
           data.save((err) => {
             if (!err) res.status(200).send({ status: true });
-            else res.status(200).send({ status: false });
+            else res.status(400).send({ status: false });
           });
         } else res.status(200).send({ status: "email" });
       } else res.status(500).send({ status: false });
@@ -45,9 +46,10 @@ router.post("/api/login", async (req, res) => {
       userEmail: email,
       userPassword: password,
     });
+
     if (data != null) {
       const id = data._id.toString();
-      const token = generateToken(id);
+      const token = "Bearear " + generateToken(id);
       User.findOneAndUpdate(
         { _id: id },
         {
@@ -55,13 +57,17 @@ router.post("/api/login", async (req, res) => {
             token: token,
           },
         },
-        () => {}
+        (err, data) => console.log(err)
       );
       res.status(200).send({ status: true, token: token });
-    } else res.status(401).send({ status: false });
+    } else res.status(400).send({ status: false });
   } catch (e) {
     res.status(500).send({ status: false });
   }
 });
+
+router.post("/verify", auth, (req, res) => {
+  res.status(200).send({status: true})
+})
 
 module.exports = router;

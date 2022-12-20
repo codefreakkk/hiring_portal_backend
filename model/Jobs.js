@@ -1,7 +1,11 @@
 const mongoose = require("mongoose");
 
 const jobs = mongoose.Schema({
-    oid: String,
+    oid: {
+        type: mongoose.Schema.ObjectId,
+        ref: "orgDetails",
+    },
+    oname: "String",
     jobTitle: String, 
     jobDescription: String,
     jobType: String,
@@ -21,5 +25,5 @@ const jobs = mongoose.Schema({
     status: String,
 })
 
-const postJobs = new mongoose.model("postJobs", jobs);
+const postJobs = new mongoose.model("jobs", jobs);
 module.exports = postJobs;

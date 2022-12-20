@@ -30,12 +30,13 @@ router.post("/api/postjob", (req, res) => {
     const file = req.files.image;
     const ext = path.extname(file.name);
     const data = req.body;
-    if (ext == ".png" || ext == ".pdf" || ext == ".jpeg" || ext == ".jpg") {
+    if (ext == ".png" || ext == ".jpeg" || ext == ".jpg") {
       cloudinary.uploader.upload(file.tempFilePath, (err, result) => {
         // if file uploads then store all data into database
         if (!err) {
           const jobData = new Jobs({
             oid: data.oid,
+            oname: data.oname,
             jobTitle: data.jobTitle.toLowerCase(),
             jobDescription: data.jobDesc,
             jobType: data.jobType,
@@ -57,13 +58,13 @@ router.post("/api/postjob", (req, res) => {
           // save data
           jobData.save((err, data) => {
             if (!err) res.status(200).send({ status: true });
-            else res.status(500).send({ status: 500 });
+            else res.status(400).send({ status: 500 });
           });
-        } else res.status(500).send({ status: -1 });
+        } else res.status(400).send({ status: -1 });
       });
     } else {
       console.log("Error");
-      res.status(500).send({ status: -2 });
+      res.status(400).send({ status: -2 });
     }
   } catch (e) {
     res.status(500).send({ status: -1 });
