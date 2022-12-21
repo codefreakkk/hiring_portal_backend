@@ -6,7 +6,10 @@ const jobs = mongoose.Schema({
         ref: "orgDetails",
     },
     oname: "String",
-    jobTitle: String, 
+    jobTitle: {
+        type:String,
+        default: "",
+    }, 
     jobDescription: String,
     jobType: String,
     jobCategory: String,

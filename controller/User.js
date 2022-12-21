@@ -1,8 +1,17 @@
 const express = require("express");
 const router = express.Router();
 const User = require("../model/User");
+const cloudinary = require("cloudinary").v2;
 const jwt = require("jsonwebtoken");
 const auth = require("../middleware/auth");
+const path = require("path");
+
+// image upload configuration
+cloudinary.config({
+  cloud_name: "duwbwdwqc",
+  api_key: "723896973772636",
+  api_secret: "srE4voWKjc8uQ8MnR4BXXqDecgY",
+});
 
 const generateToken = (id) => {
   return jwt.sign({ id }, "codefreak.co.in", {
@@ -10,13 +19,82 @@ const generateToken = (id) => {
   });
 };
 
+
+// route for getting a user data for admin
+router.get("/api/getuserbyid/:id", (req, res) => {
+  console.log(req.params.id);
+  try {
+    User.findOne({_id: req.params.id}, (err, data) => {
+      if(!err) res.status(200).send(data);
+      else res.status(500).send({status: false});
+    })
+  } catch(e) {
+    res.status(500).send({status: false});
+  }
+})
+
+// route for getting a user data
+router.get("/api/getuserbyid", auth, (req, res) => {
+  try {
+    User.findOne({_id: req.user.id}, (err, data) => {
+      if(!err) res.status(200).send(data);
+      else res.status(500).send({status: false});
+    })
+  } catch(e) {
+    res.status(500).send({status: false});
+  }
+})
+
+// route for updating user and uploading cv
+router.post("/api/updateuser", auth, (req, res) => {
+  try {
+    if (!req.files) {
+      res.status(400).send({ status: false });
+      return;
+    }
+    const file = req.files.cv;
+    const ext = path.extname(file.name);
+    const data = req.body;
+
+    if (ext == ".pdf") {
+      cloudinary.uploader.upload(file.tempFilePath, (err, result) => {
+        if (!err) {
+          console.log("CV uploaded");
+          const url = result.url;
+          User.findOneAndUpdate(
+            { _id: data.id },
+            {
+              $set: {
+                userName: data.name,
+                userEmail: data.email,
+                contact: data.number,
+                gender: data.gender,
+                address: data.address,
+                qual: data.qual,
+                state: data.state,
+                city: data.city,
+                cvUrl: url,
+              },
+            },
+            (err, data) => {
+              if (!err) res.status(200).send(data);
+              else res.status(500).send({ status: false });
+            }
+          );
+        } else res.status(500).send({ status: false });
+      });
+    }
+  } catch (e) {
+    console.log(e);
+  }
+});
+
 router.post("/api/registeruser", (req, res) => {
   try {
     const userData = req.body;
     // check if email already exist in db
     User.findOne({ userEmail: userData.userEmail }, (err, emailData) => {
       if (!err) {
-        console.log(emailData);
         if (emailData == null) {
           const data = new User({
             userName: userData.userName,
@@ -66,8 +144,18 @@ router.post("/api/login", async (req, res) => {
   }
 });
 
-router.post("/verify", auth, (req, res) => {
-  res.status(200).send({status: true})
-})
+// route for fetching username and email
+router.get("/api/getuserbyid", auth, (req, res) => {
+  const uid = req.user._id.toString();
+  try {
+    User.findOne({ _id: uid }, (err, data) => {
+      if (!err) res.status(200).send(data);
+      else res.status(400).send({ status: false });
+    });
+  } catch (e) {
+    console.log(e);
+    res.status(500).send({ status: false });
+  }
+});
 
 module.exports = router;

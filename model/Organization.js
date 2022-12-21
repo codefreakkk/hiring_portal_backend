@@ -9,6 +9,7 @@ const organization = mongoose.Schema({
     organizationLocation: String,
     fileUrl: String,
     joiningDate: String,
+    password: String,
 });
 
 const orgDetails = new mongoose.model("orgDetails", organization);
